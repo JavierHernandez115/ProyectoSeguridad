@@ -3,7 +3,8 @@ import threading
 import tkinter as tk
 import os
 from chat_interface import ChatInterface
-
+import funciones  # Asumiendo que este módulo contiene las funciones mencionadas
+import main 
 def get_local_ip():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     try:
@@ -19,54 +20,67 @@ HOST = get_local_ip()
 PORT = 12345
 clients = []
 
+
+
+main.GenerarLlavesServidor()
+
+def send_file(client_socket, file_path):
+    with open(file_path, 'rb') as file:
+        while (chunk := file.read(1024)):
+            client_socket.send(chunk)
+    client_socket.send(b'<EOF>')  # Indicar el final del archivo
+
+def receive_file(client_socket, file_path):
+    with open(file_path, 'wb') as file:
+        while True:
+            chunk = client_socket.recv(1024)
+            if chunk.endswith(b'<EOF>'):
+                file.write(chunk[:-5])  # Remove the <EOF> marker
+                break
+            file.write(chunk)
+
 def broadcast(message, current_client=None):
     for client in clients:
-        if client != current_client:
+        if client['socket'] != current_client:
             try:
-                client.send(b'TEXT' + len(message).to_bytes(4, 'big') + message.encode('utf-8'))
+                client['socket'].send(message.encode('utf-8'))
             except:
-                client.close()
+                client['socket'].close()
                 clients.remove(client)
 
-def send_file_to_clients(file_path, current_client=None):
-    with open(file_path, 'rb') as file:
-        data = file.read()
-        for client in clients:
-            if client != current_client:
-                try:
-                    client.send(b'FILE')
-                    client.send(len(os.path.basename(file_path)).to_bytes(4, 'big') + os.path.basename(file_path).encode('utf-8'))
-                    client.send(len(data).to_bytes(8, 'big') + data)
-                except:
-                    client.close()
-                    clients.remove(client)
-
 def handle_client(client_socket, chat_interface):
-    while True:
-        try:
+    try:
+        # Enviar el archivo de la clave pública del servidor
+        client_socket.send(b'SENDFILE')
+        client_socket.send(b'ClavePublica_Serv')
+        send_file(client_socket, 'ClavePublica_Serv')
+
+        # Recibir el archivo de la clave pública del cliente
+        file_request = client_socket.recv(8)
+        if file_request == b'SENDFILE':
+            filename = client_socket.recv(1024).decode('utf-8')
+            receive_file(client_socket, filename)
+
+        clients.append({'socket': client_socket, 'public_key_file': filename})
+
+        while True:
             data_type = client_socket.recv(4)
             if data_type == b'TEXT':
-                msg_len = int.from_bytes(client_socket.recv(4), 'big')
-                message = client_socket.recv(msg_len).decode('utf-8')
+                message = client_socket.recv(1024).decode('utf-8')
                 if not message:
                     break
                 chat_interface.display_message(f"Cliente: {message}")
                 broadcast(message, client_socket)
             elif data_type == b'FILE':
-                filename_len = int.from_bytes(client_socket.recv(4), 'big')
-                filename = client_socket.recv(filename_len).decode('utf-8')
-                file_size = int.from_bytes(client_socket.recv(8), 'big')
-                file_data = b''
-                while len(file_data) < file_size:
-                    file_data += client_socket.recv(1024)
+                filename = client_socket.recv(1024).decode('utf-8')
+                file_data = client_socket.recv(1024*1024)
                 with open(f"received_{filename}", 'wb') as file:
                     file.write(file_data)
                 chat_interface.display_message(f"Archivo {filename} recibido")
                 broadcast(f"Archivo {filename} recibido", client_socket)
-        except:
-            clients.remove(client_socket)
-            client_socket.close()
-            break
+    except:
+        client_socket.close()
+        clients.remove(client_socket)
 
 def start_server(chat_interface):
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -77,13 +91,12 @@ def start_server(chat_interface):
     while True:
         client_socket, client_address = server.accept()
         chat_interface.display_message(f"Conexión aceptada de {client_address}")
-        clients.append(client_socket)
         client_thread = threading.Thread(target=handle_client, args=(client_socket, chat_interface))
         client_thread.start()
 
 def main():
     root = tk.Tk()
-    chat_interface = ChatInterface(root, lambda msg: broadcast(f"Servidor: {msg}"), send_file_to_clients)
+    chat_interface = ChatInterface(root, lambda msg: broadcast(f"Servidor: {msg}"), broadcast)
     server_thread = threading.Thread(target=start_server, args=(chat_interface,))
     server_thread.daemon = True
     server_thread.start()

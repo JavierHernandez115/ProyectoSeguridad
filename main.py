@@ -3,11 +3,16 @@ import os
 
 
 #Generacion de claves
-#clavePrivada=funciones.generar_clave_privada_rsa("ClavePrivada_Con", "15Agosto2003")
-#clavePrivada=funciones.generar_clave_publica_rsa("ClavePrivada_Con", "ClavePublica_Con","15Agosto2003")
 
 
 
+def GenerarLlavesServidor():
+    clavePrivada=funciones.generar_clave_privada_rsa("ClavePrivada_Serv", "123456")
+    clavePrivada=funciones.generar_clave_publica_rsa("ClavePrivada_Serv", "ClavePublica_Serv","123456")
+    
+def GenerarLlavesCliente():
+    clavePrivada=funciones.generar_clave_privada_rsa("ClavePrivada_Client", "123456")
+    clavePrivada=funciones.generar_clave_publica_rsa("ClavePrivada_Client", "ClavePublica_Clien","123456")
 
 def Encriptar(cout, ClavePublica, Stego, is_file=False):
     mensaje=""
@@ -22,7 +27,7 @@ def Encriptar(cout, ClavePublica, Stego, is_file=False):
     #Generando el hash_sha384
     hash_sha384=funciones.generar_hash_sha384(mensaje)
 
-    #Encriptando RSA_Invertido
+    #Encriptando RSA_Invertido as m
     funciones.encriptar_rsa_invertido(mensaje,ClavePublica,"mensaje.enc")
 
     #Generar hash512
@@ -61,7 +66,3 @@ def Desencriptar():
 
 
 #Encriptar("prueba.mp3","ClavePublica_Con","imagen.jpeg",True)
-Desencriptar()
-
-
-qeqqeweqw12312312313231242342342
