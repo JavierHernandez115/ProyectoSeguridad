@@ -22,9 +22,9 @@ class ChatInterface:
 
         self.send_button = ttk.Button(self.frame, text="Enviar", command=self.send_message)
         self.send_button.pack(pady=5, padx=10, side=tk.RIGHT)
-
-        self.send_file_button = ttk.Button(self.frame, text="Enviar Archivo", command=self.send_file)
-        self.send_file_button.pack(pady=5, padx=10, side=tk.LEFT)
+        
+        self.file_button = ttk.Button(self.frame, text="Enviar Archivo", command=self.send_file)
+        self.file_button.pack(pady=5, padx=10, side=tk.RIGHT)
 
     def send_message(self):
         message = self.message_entry.get()
