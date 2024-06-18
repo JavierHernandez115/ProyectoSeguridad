@@ -2,6 +2,7 @@ import socket
 import threading
 import tkinter as tk
 from chat_interface import ChatInterface
+import os
 
 def get_local_ip():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -43,7 +44,7 @@ def handle_client(client_socket, chat_interface):
             if message.startswith('FILE:'):
                 filename = message.split(':', 1)[1]
                 chat_interface.display_message(f"Cliente enviando archivo: {filename}")
-                send_file(client_socket, filename)
+                receive_file(client_socket, filename)
             elif not message:
                 break
             else:
@@ -54,6 +55,16 @@ def handle_client(client_socket, chat_interface):
             clients.remove(client_socket)
             client_socket.close()
             break
+
+def receive_file(client_socket, filename):
+    with open(os.path.join('received_files', os.path.basename(filename)), 'wb') as f:
+        while True:
+            bytes_read = client_socket.recv(1024)
+            if bytes_read.endswith(b'FILETRANSFERCOMPLETE'):
+                f.write(bytes_read[:-20])  # remove FILETRANSFERCOMPLETE
+                break
+            f.write(bytes_read)
+    print(f"Archivo recibido: {filename}")
 
 def start_server(chat_interface):
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
