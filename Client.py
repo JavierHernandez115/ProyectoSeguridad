@@ -1,8 +1,7 @@
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, filedialog
 import socket
 import threading
-import os
 from chat_interface import ChatInterface
 
 def connect_to_server(ip, chat_interface):
@@ -14,17 +13,9 @@ def connect_to_server(ip, chat_interface):
         def receive_messages():
             while True:
                 try:
-                    data_type = client_socket.recv(4)
-                    if data_type == b'TEXT':
-                        message = client_socket.recv(1024).decode('utf-8')
-                        if message:
-                            chat_interface.display_message(message)
-                    elif data_type == b'FILE':
-                        filename = client_socket.recv(1024).decode('utf-8')
-                        file_data = client_socket.recv(1024*1024)
-                        with open(f"received_{filename}", 'wb') as file:
-                            file.write(file_data)
-                        chat_interface.display_message(f"Archivo {filename} recibido")
+                    message = client_socket.recv(1024).decode('utf-8')
+                    if message:
+                        chat_interface.display_message(message)
                 except Exception as e:
                     chat_interface.display_message(f"Error recibiendo mensaje: {e}")
                     break
@@ -38,30 +29,38 @@ def connect_to_server(ip, chat_interface):
         chat_interface.display_message(f"No se pudo conectar al servidor: {e}")
         return None
 
+def send_file(client_socket, chat_interface):
+    filename = filedialog.askopenfilename()
+    if filename:
+        chat_interface.display_message(f"Enviando archivo: {filename}")
+        client_socket.sendall(f"FILE:{filename}".encode('utf-8'))
+        with open(filename, 'rb') as f:
+            while True:
+                bytes_read = f.read(1024)
+                if not bytes_read:
+                    break
+                client_socket.sendall(bytes_read)
+        client_socket.sendall(b'FILETRANSFERCOMPLETE')
+
 def start_chat_interface(ip):
     root = tk.Tk()
-    chat_interface = ChatInterface(root, lambda msg: send_message(msg, client_socket), lambda file_path: send_file(file_path, client_socket))
+    chat_interface = ChatInterface(root, lambda msg: send_message(msg, client_socket))
     client_socket = connect_to_server(ip, chat_interface)
+
+    def send_file_callback():
+        send_file(client_socket, chat_interface)
+
+    file_button = ttk.Button(chat_interface.frame, text="Enviar Archivo", command=send_file_callback)
+    file_button.pack(pady=5, padx=10, side=tk.RIGHT)
+
     root.mainloop()
 
 def send_message(message, client_socket):
     if client_socket:
         try:
-            client_socket.send(b'TEXT')
             client_socket.send(message.encode('utf-8'))
         except Exception as e:
             print(f"Error enviando mensaje: {e}")
-
-def send_file(file_path, client_socket):
-    if client_socket:
-        try:
-            with open(file_path, 'rb') as file:
-                data = file.read()
-                client_socket.send(b'FILE')
-                client_socket.send(os.path.basename(file_path).encode('utf-8'))
-                client_socket.send(data)
-        except Exception as e:
-            print(f"Error enviando archivo: {e}")
 
 def main():
     root = tk.Tk()
