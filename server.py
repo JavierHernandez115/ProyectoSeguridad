@@ -1,13 +1,12 @@
 import socket
 import threading
 import tkinter as tk
+import os
 from chat_interface import ChatInterface
 
 def get_local_ip():
-    """Obtiene la dirección IP local de la máquina."""
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     try:
-        # No es necesario que el servidor esté realmente conectado a internet.
         s.connect(('10.254.254.254', 1))
         local_ip = s.getsockname()[0]
     except Exception:
@@ -29,14 +28,36 @@ def broadcast(message, current_client=None):
                 client.close()
                 clients.remove(client)
 
+def send_file_to_clients(file_path, current_client=None):
+    with open(file_path, 'rb') as file:
+        data = file.read()
+        for client in clients:
+            if client != current_client:
+                try:
+                    client.send(b'FILE')
+                    client.send(os.path.basename(file_path).encode('utf-8'))
+                    client.send(data)
+                except:
+                    client.close()
+                    clients.remove(client)
+
 def handle_client(client_socket, chat_interface):
     while True:
         try:
-            message = client_socket.recv(1024).decode('utf-8')
-            if not message:
-                break
-            chat_interface.display_message(f"Cliente: {message}")
-            broadcast(message, client_socket)
+            data_type = client_socket.recv(4)
+            if data_type == b'TEXT':
+                message = client_socket.recv(1024).decode('utf-8')
+                if not message:
+                    break
+                chat_interface.display_message(f"Cliente: {message}")
+                broadcast(message, client_socket)
+            elif data_type == b'FILE':
+                filename = client_socket.recv(1024).decode('utf-8')
+                file_data = client_socket.recv(1024*1024)
+                with open(f"received_{filename}", 'wb') as file:
+                    file.write(file_data)
+                chat_interface.display_message(f"Archivo {filename} recibido")
+                broadcast(f"Archivo {filename} recibido", client_socket)
         except:
             clients.remove(client_socket)
             client_socket.close()
@@ -57,7 +78,7 @@ def start_server(chat_interface):
 
 def main():
     root = tk.Tk()
-    chat_interface = ChatInterface(root, lambda msg: broadcast(f"Servidor: {msg}"))
+    chat_interface = ChatInterface(root, lambda msg: broadcast(f"Servidor: {msg}"), send_file_to_clients)
     server_thread = threading.Thread(target=start_server, args=(chat_interface,))
     server_thread.daemon = True
     server_thread.start()

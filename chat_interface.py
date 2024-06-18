@@ -1,11 +1,11 @@
 import tkinter as tk
-from tkinter import ttk
-import threading
+from tkinter import ttk, filedialog
 
 class ChatInterface:
-    def __init__(self, master, send_callback):
+    def __init__(self, master, send_callback, send_file_callback):
         self.master = master
         self.send_callback = send_callback
+        self.send_file_callback = send_file_callback
 
         self.master.title("Chat")
         self.master.geometry("400x500")
@@ -23,11 +23,19 @@ class ChatInterface:
         self.send_button = ttk.Button(self.frame, text="Enviar", command=self.send_message)
         self.send_button.pack(pady=5, padx=10, side=tk.RIGHT)
 
+        self.send_file_button = ttk.Button(self.frame, text="Enviar Archivo", command=self.send_file)
+        self.send_file_button.pack(pady=5, padx=10, side=tk.LEFT)
+
     def send_message(self):
         message = self.message_entry.get()
         if message:
             self.send_callback(message)
             self.message_entry.delete(0, tk.END)
+
+    def send_file(self):
+        file_path = filedialog.askopenfilename()
+        if file_path:
+            self.send_file_callback(file_path)
 
     def display_message(self, message):
         self.text_area.config(state='normal')
