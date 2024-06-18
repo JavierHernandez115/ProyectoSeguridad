@@ -44,15 +44,8 @@ def send_file(client_socket, chat_interface):
 
 def start_chat_interface(ip):
     root = tk.Tk()
-    chat_interface = ChatInterface(root, lambda msg: send_message(msg, client_socket))
+    chat_interface = ChatInterface(root, lambda msg: send_message(msg, client_socket), lambda: send_file(client_socket, chat_interface))
     client_socket = connect_to_server(ip, chat_interface)
-
-    def send_file_callback():
-        send_file(client_socket, chat_interface)
-
-    file_button = ttk.Button(chat_interface.frame, text="Enviar Archivo", command=send_file_callback)
-    file_button.pack(pady=5, padx=10, side=tk.RIGHT)
-
     root.mainloop()
 
 def send_message(message, client_socket):

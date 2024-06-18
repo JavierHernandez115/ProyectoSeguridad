@@ -1,7 +1,6 @@
 import socket
 import threading
 import tkinter as tk
-from tkinter import filedialog
 from chat_interface import ChatInterface
 
 def get_local_ip():
@@ -69,9 +68,15 @@ def start_server(chat_interface):
         client_thread = threading.Thread(target=handle_client, args=(client_socket, chat_interface))
         client_thread.start()
 
+def send_file_callback():
+    filename = filedialog.askopenfilename()
+    if filename:
+        for client in clients:
+            client.sendall(f"FILE:{filename}".encode('utf-8'))
+
 def main():
     root = tk.Tk()
-    chat_interface = ChatInterface(root, lambda msg: broadcast(f"Servidor: {msg}"))
+    chat_interface = ChatInterface(root, lambda msg: broadcast(f"Servidor: {msg}"), send_file_callback)
     server_thread = threading.Thread(target=start_server, args=(chat_interface,))
     server_thread.daemon = True
     server_thread.start()
