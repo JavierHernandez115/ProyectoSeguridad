@@ -1,37 +1,31 @@
 import subprocess
 import os
-#Generar el HASH en SHA-384 del mensaje
+import os
+import subprocess
+
 def generar_hash_sha384(input_data):
-    if os.path.isfile(input_data):
-        file_path = input_data
-        with open(file_path, 'rb') as f:
-            mensaje = f.read()
-    else:
-        # Si es un texto, lo escribe a un archivo permanente
-        file_path = 'mensaje.txt'
-        with open(file_path, 'wb') as f:
-            f.write(input_data.encode() if isinstance(input_data, str) else input_data)
-        with open(file_path, 'rb') as f:
-            mensaje = f.read()
-    sha384_path = "hash384.txt"
 
-    # Genera el hash usando sha384sum
-    proceso = subprocess.Popen(['sha384sum'], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
-    hash_output, _ = proceso.communicate(input=mensaje)
+    comando = f"openssl dgst -sha384 {input_data}"
+    print(comando)
+    result = subprocess.run(comando, shell=True, capture_output=True, text=True, check=True)
 
-    with open(sha384_path, 'wb') as f:  
-        f.write(hash_output.split()[0]) 
-    return hash_output.split()[0].decode(), file_path
-# Ejemplo de uso
-#hash_sha384 = generar_hash_sha384(mensaje)
-#print(f"SHA-384: {hash_sha384}")
+    # El resultado de openssl incluye una línea con el hash, como "SHA384(stdin)= <hash>"
+    # o "SHA384(<filename>)= <hash>", por lo que tomamos solo la última parte.
+    hash_value = result.stdout.split("= ")[1].strip()
+    archivo_hash=f"hash384"
+    with open(archivo_hash , 'w') as f:
+            f.write(hash_value)
+    return hash_value
+
 
 #Encriptar el mensaje con RSA invertido
 
 def encriptar_rsa_invertido(archivo_mensaje, clave_publica_path, archivo_salida):
-    comando = f"openssl pkeyutl  -encrypt -inkey {clave_publica_path} -pubin -in {archivo_mensaje} -out {archivo_salida}"
+    comando = f"openssl pkeyutl -encrypt -inkey {clave_publica_path} -pubin -in {archivo_mensaje} -out {archivo_salida}"
     subprocess.run(comando, shell=True, check=True)
 
+# Ejemplo de uso:
+# encriptar_rsa_invertido("imagen.jpg", "ClavePublica_Con.pem")
 
 # Ejemplo de uso
 #clave_publica_path = 'ruta/a/clave_publica.pem'
@@ -39,8 +33,13 @@ def encriptar_rsa_invertido(archivo_mensaje, clave_publica_path, archivo_salida)
 
 #Generar el HASH sha512
 def generar_hash_sha512(file_path):
+    print(file_path)
     comando = ['sha512sum', file_path]
     hash_output = subprocess.check_output(comando).split()[0].decode()
+    
+    archivo_hash="hash512"
+    with open(archivo_hash, 'w') as f:
+        f.write(hash_output)
     return hash_output
 # Ejemplo de uso
 #hash_sha512 = generar_hash_sha512('mensaje_encriptado.bin')
@@ -62,6 +61,9 @@ def esconder_mensaje(archivo_cover, archivo_mensaje, archivo_salida, password):
 def generar_hash_blake2(file_path):
     comando = ['b2sum', file_path]
     hash_output = subprocess.check_output(comando).split()[0].decode()
+    archivo_hash="hashb2"
+    with open(archivo_hash, 'w') as f:
+        f.write(hash_output)
     return hash_output
 # Ejemplo de uso
 #hash_blake2 = generar_hash_blake2('mensaje_encriptado.bin')
@@ -69,7 +71,13 @@ def generar_hash_blake2(file_path):
 
 #Validar el hash BLake 2 
 def validar_hash_blake2(archivo_extraido, hash_blake2_original):
+    with open(hash_blake2_original, 'r') as f:
+        hash_blake2_original = f.read().strip()
+    
+    # Calcular el hash BLAKE2 del archivo extraído
     hash_blake2_calculado = generar_hash_blake2(archivo_extraido)
+    
+    # Comparar ambos hashes
     return hash_blake2_calculado == hash_blake2_original
 
 # Ejemplo de uso
@@ -80,6 +88,9 @@ def validar_hash_blake2(archivo_extraido, hash_blake2_original):
 
 #Validar HAsh SHA-512
 def validar_hash_sha512(file_path, hash_original):
+    with open(hash_original, 'r')as f:
+        hash_original=f.read().strip()
+
     hash_calculado = generar_hash_sha512(file_path)
     return hash_calculado == hash_original
 
@@ -91,8 +102,9 @@ def validar_hash_sha512(file_path, hash_original):
 
 #Desencriptar el mensaje usando la clave privada
 def desencriptar_rsa(archivo_mensaje_encriptado, clave_privada_path, archivo_salida):
-    comando = f"openssl rsautl -decrypt -inkey {clave_privada_path} -in {archivo_mensaje_encriptado} -out {archivo_salida}"
+    comando = f"openssl pkeyutl -decrypt -inkey {clave_privada_path} -in {archivo_mensaje_encriptado} -out {archivo_salida}"
     subprocess.run(comando, shell=True, check=True)
+
 
 # Ejemplo de uso
 #clave_privada_path = 'ruta/a/clave_privada.pem'
@@ -100,13 +112,34 @@ def desencriptar_rsa(archivo_mensaje_encriptado, clave_privada_path, archivo_sal
 
 #Validar el hash sha-384
 def validar_hash_sha384(mensaje, hash_original):
+    with open(hash_original, 'r')as f:
+        hash_original=f.read().strip()
+
     return generar_hash_sha384(mensaje) == hash_original
+
+#Extraer StegoObjeto
+
+def extraer_archivo(archivo_stego, password):
+    # Crear el comando steghide para extraer el archivo oculto
+    comando = f"steghide extract -sf {archivo_stego} -p {password}"
+    
+    # Ejecutar el comando usando subprocess
+    resultado = subprocess.run(comando, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    
+    if resultado.returncode == 0:
+        # Eliminar el archivo esteganográfico
+        #os.remove(archivo_stego)
+        return True
+    else:
+        print(f"Error al extraer el archivo oculto: {resultado.stderr.decode()}")
+        return False
 
 # Ejemplo de uso
 #if validar_hash_sha384(mensaje_desencriptado, hash_sha384):
     #print("El mensaje no ha sido alterado. Está listo.")
 #else:
-    #print("Error: El mensaje ha sido alterado.")
+    #print("Error: El mensaje ha sido alterado.")Desencriptar rsa_invertido
+#funciones.desencriptar_rsa("mensaje.enc","ClavePrivada_Con","mensaje.
 
 
 #Generar Llaves
@@ -120,4 +153,17 @@ def generar_clave_publica_rsa(nombre_archivo_privada, nombre_archivo_publica, pa
     comando_publica = f"openssl rsa -pubout -in {nombre_archivo_privada} -out {nombre_archivo_publica} -passin pass:{password}"
     subprocess.run(comando_publica, shell=True)
     print(f"Clave pública generada y guardada en '{nombre_archivo_publica}'.")
+
+def encriptar_archivo_aes(archivo_mensaje, clave_aes_path, archivo_encrypted):
+    comando = f"openssl enc -aes-256-cbc -salt -in {archivo_mensaje} -out {archivo_encrypted} -pass file:{clave_aes_path}"
+    subprocess.run(comando, shell=True, check=True)
+
+
+def generar_clave_aes(clave_aes_path):
+    comando = f"openssl rand -out {clave_aes_path} 32"
+    subprocess.run(comando, shell=True, check=True)
+
+def encriptar_clave_aes_rsa(clave_aes_path, clave_publica_path, archivo_clave_encrypted):
+    comando = f"openssl pkeyutl -encrypt -inkey {clave_publica_path} -pubin -in {clave_aes_path} -out {archivo_clave_encrypted}"
+    subprocess.run(comando, shell=True, check=True)
 
