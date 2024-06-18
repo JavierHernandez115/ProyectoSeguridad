@@ -7,9 +7,6 @@ import os
 #clavePrivada=funciones.generar_clave_publica_rsa("ClavePrivada_Con", "ClavePublica_Con","15Agosto2003")
 
 
-mensaje="este es un mensaje de prueba"
-archivo="imagen.jpeg"
-
 
 
 def Encriptar(cout, ClavePublica, Stego, is_file=False):
@@ -67,3 +64,4 @@ def Desencriptar():
 Desencriptar()
 
 
+qeqqeweqw12312312313231242342342
