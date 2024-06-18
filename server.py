@@ -3,7 +3,20 @@ import threading
 import tkinter as tk
 from chat_interface import ChatInterface
 
-HOST = '0.0.0.0'
+def get_local_ip():
+    """Obtiene la dirección IP local de la máquina."""
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        # No es necesario que el servidor esté realmente conectado a internet.
+        s.connect(('10.254.254.254', 1))
+        local_ip = s.getsockname()[0]
+    except Exception:
+        local_ip = '127.0.0.1'
+    finally:
+        s.close()
+    return local_ip
+
+HOST = get_local_ip()
 PORT = 12345
 clients = []
 
