@@ -23,7 +23,7 @@ def broadcast(message, current_client=None):
     for client in clients:
         if client != current_client:
             try:
-                client.send(message.encode('utf-8'))
+                client.send(b'TEXT' + len(message).to_bytes(4, 'big') + message.encode('utf-8'))
             except:
                 client.close()
                 clients.remove(client)
@@ -35,8 +35,8 @@ def send_file_to_clients(file_path, current_client=None):
             if client != current_client:
                 try:
                     client.send(b'FILE')
-                    client.send(os.path.basename(file_path).encode('utf-8'))
-                    client.send(data)
+                    client.send(len(os.path.basename(file_path)).to_bytes(4, 'big') + os.path.basename(file_path).encode('utf-8'))
+                    client.send(len(data).to_bytes(8, 'big') + data)
                 except:
                     client.close()
                     clients.remove(client)
@@ -46,14 +46,19 @@ def handle_client(client_socket, chat_interface):
         try:
             data_type = client_socket.recv(4)
             if data_type == b'TEXT':
-                message = client_socket.recv(1024).decode('utf-8')
+                msg_len = int.from_bytes(client_socket.recv(4), 'big')
+                message = client_socket.recv(msg_len).decode('utf-8')
                 if not message:
                     break
                 chat_interface.display_message(f"Cliente: {message}")
                 broadcast(message, client_socket)
             elif data_type == b'FILE':
-                filename = client_socket.recv(1024).decode('utf-8')
-                file_data = client_socket.recv(1024*1024)
+                filename_len = int.from_bytes(client_socket.recv(4), 'big')
+                filename = client_socket.recv(filename_len).decode('utf-8')
+                file_size = int.from_bytes(client_socket.recv(8), 'big')
+                file_data = b''
+                while len(file_data) < file_size:
+                    file_data += client_socket.recv(1024)
                 with open(f"received_{filename}", 'wb') as file:
                     file.write(file_data)
                 chat_interface.display_message(f"Archivo {filename} recibido")

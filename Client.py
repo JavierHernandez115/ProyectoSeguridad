@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, filedialog
 import socket
 import threading
 import os
@@ -16,12 +16,17 @@ def connect_to_server(ip, chat_interface):
                 try:
                     data_type = client_socket.recv(4)
                     if data_type == b'TEXT':
-                        message = client_socket.recv(1024).decode('utf-8')
+                        msg_len = int.from_bytes(client_socket.recv(4), 'big')
+                        message = client_socket.recv(msg_len).decode('utf-8')
                         if message:
-                            chat_interface.display_message(message)
+                            chat_interface.display_message(f"Servidor: {message}")
                     elif data_type == b'FILE':
-                        filename = client_socket.recv(1024).decode('utf-8')
-                        file_data = client_socket.recv(1024*1024)
+                        filename_len = int.from_bytes(client_socket.recv(4), 'big')
+                        filename = client_socket.recv(filename_len).decode('utf-8')
+                        file_size = int.from_bytes(client_socket.recv(8), 'big')
+                        file_data = b''
+                        while len(file_data) < file_size:
+                            file_data += client_socket.recv(1024)
                         with open(f"received_{filename}", 'wb') as file:
                             file.write(file_data)
                         chat_interface.display_message(f"Archivo {filename} recibido")
@@ -48,6 +53,7 @@ def send_message(message, client_socket):
     if client_socket:
         try:
             client_socket.send(b'TEXT')
+            client_socket.send(len(message).to_bytes(4, 'big'))
             client_socket.send(message.encode('utf-8'))
         except Exception as e:
             print(f"Error enviando mensaje: {e}")
@@ -58,8 +64,8 @@ def send_file(file_path, client_socket):
             with open(file_path, 'rb') as file:
                 data = file.read()
                 client_socket.send(b'FILE')
-                client_socket.send(os.path.basename(file_path).encode('utf-8'))
-                client_socket.send(data)
+                client_socket.send(len(os.path.basename(file_path)).to_bytes(4, 'big') + os.path.basename(file_path).encode('utf-8'))
+                client_socket.send(len(data).to_bytes(8, 'big') + data)
         except Exception as e:
             print(f"Error enviando archivo: {e}")
 
