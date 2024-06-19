@@ -6,30 +6,34 @@ import netifaces
 def handle_client(client_socket, addr):
     print(f"[+] Conexión aceptada de {addr}")
     while True:
-        # Recibe el archivo del cliente
-        file_data = client_socket.recv(1024)
-        if not file_data:
+        try:
+            # Recibe el archivo del cliente
+            file_data = client_socket.recv(1024)
+            if not file_data:
+                break
+
+            # Guarda el archivo recibido
+            with open(f"mensaje_recibido_{addr[1]}.txt", 'wb') as file:
+                file.write(file_data)
+            
+            # Leer el archivo recibido
+            with open(f"mensaje_recibido_{addr[1]}.txt", 'r') as file:
+                received_msg = file.read()
+                print(f"[{addr}] {received_msg}")
+
+            # Pedir mensaje al usuario del servidor
+            response_msg = input("Escribe un mensaje para el cliente: ")
+
+            # Guardar el mensaje de respuesta en un archivo
+            with open(f"mensaje_respuesta_{addr[1]}.txt", 'w') as file:
+                file.write(response_msg)
+
+            # Enviar el archivo de respuesta al cliente
+            with open(f"mensaje_respuesta_{addr[1]}.txt", 'rb') as file:
+                client_socket.sendall(file.read())
+        except Exception as e:
+            print(f"Error al manejar el cliente {addr}: {e}")
             break
-
-        # Guarda el archivo recibido
-        with open(f"mensaje_recibido_{addr[1]}.txt", 'wb') as file:
-            file.write(file_data)
-        
-        # Leer el archivo recibido
-        with open(f"mensaje_recibido_{addr[1]}.txt", 'r') as file:
-            received_msg = file.read()
-            print(f"[{addr}] {received_msg}")
-
-        # Pedir mensaje al usuario del servidor
-        response_msg = input("Escribe un mensaje para el cliente: ")
-
-        # Guardar el mensaje de respuesta en un archivo
-        with open(f"mensaje_respuesta_{addr[1]}.txt", 'w') as file:
-            file.write(response_msg)
-
-        # Enviar el archivo de respuesta al cliente
-        with open(f"mensaje_respuesta_{addr[1]}.txt", 'rb') as file:
-            client_socket.sendall(file.read())
         
     client_socket.close()
 
@@ -46,9 +50,9 @@ def get_local_ip():
 
 server_ip = get_local_ip()  # Obtiene la IP local correcta
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-server.bind((server_ip, 9999))
+server.bind((server_ip, 8888))  # Cambiar el puerto aquí si es necesario
 server.listen(5)
-print(f"[*] Servidor escuchando en {server_ip}:9999")
+print(f"[*] Servidor escuchando en {server_ip}:8888")
 
 while True:
     client_socket, addr = server.accept()

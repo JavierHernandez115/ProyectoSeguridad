@@ -2,10 +2,14 @@ import socket
 
 # Configuración del cliente
 server_ip = input("Ingresa la dirección IP del servidor: ")
-server_port = 9999
+server_port = 8888  # Cambiar el puerto aquí si es necesario
 
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-client.connect((server_ip, server_port))
+try:
+    client.connect((server_ip, server_port))
+except socket.error as e:
+    print(f"Error al conectar con el servidor: {e}")
+    exit()
 
 while True:
     # Pedir mensaje al usuario
@@ -20,7 +24,13 @@ while True:
         client.sendall(file.read())
 
     # Recibir el archivo del servidor
-    file_data = client.recv(1024)
+    file_data = b''
+    while True:
+        part = client.recv(1024)
+        if not part:
+            break
+        file_data += part
+    
     with open("respuesta_servidor.txt", 'wb') as file:
         file.write(file_data)
     
