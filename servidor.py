@@ -15,11 +15,19 @@ def handle_client(client_socket, addr):
         with open(f"mensaje_recibido_{addr[1]}.txt", 'wb') as file:
             file.write(file_data)
         
-        # Enviar respuesta al cliente
-        response_msg = "Mensaje recibido correctamente"
+        # Leer el archivo recibido
+        with open(f"mensaje_recibido_{addr[1]}.txt", 'r') as file:
+            received_msg = file.read()
+            print(f"[{addr}] {received_msg}")
+
+        # Pedir mensaje al usuario del servidor
+        response_msg = input("Escribe un mensaje para el cliente: ")
+
+        # Guardar el mensaje de respuesta en un archivo
         with open(f"mensaje_respuesta_{addr[1]}.txt", 'w') as file:
             file.write(response_msg)
 
+        # Enviar el archivo de respuesta al cliente
         with open(f"mensaje_respuesta_{addr[1]}.txt", 'rb') as file:
             client_socket.sendall(file.read())
         

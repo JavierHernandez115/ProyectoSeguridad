@@ -24,4 +24,7 @@ while True:
     with open("respuesta_servidor.txt", 'wb') as file:
         file.write(file_data)
     
-    print("[*] Archivo recibido del servidor y guardado como 'respuesta_servidor.txt'")
+    # Leer y mostrar el mensaje de respuesta del servidor
+    with open("respuesta_servidor.txt", 'r') as file:
+        response_msg = file.read()
+        print(f"Respuesta del servidor: {response_msg}")
