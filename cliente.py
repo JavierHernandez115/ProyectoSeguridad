@@ -1,4 +1,5 @@
 import socket
+import funciones_principales
 
 # Configuración del cliente
 server_ip = input("Ingresa la dirección IP del servidor: ")
@@ -7,9 +8,26 @@ server_port = 8888  # Cambiar el puerto aquí si es necesario
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 try:
     client.connect((server_ip, server_port))
+    print("Conexión exitosa con el servidor")
 except socket.error as e:
     print(f"Error al conectar con el servidor: {e}")
     exit()
+
+# Generar llaves del cliente
+funciones_principales.GenerarLlavesCliente()
+
+# Enviar archivo ClavePublica_Client al servidor
+with open("ClavePublica_Client", 'rb') as file:
+    client.sendall(file.read())
+
+# Recibir el archivo ClavePublica_Serv del servidor
+with open("ClavePublica_Serv", 'wb') as file:
+    file_data = client.recv(1024)
+    while file_data:
+        file.write(file_data)
+        file_data = client.recv(1024)
+
+print("Archivo ClavePublica_Serv recibido y guardado.")
 
 while True:
     # Pedir mensaje al usuario
@@ -24,9 +42,11 @@ while True:
         client.sendall(file.read())
 
     # Recibir el archivo del servidor
-    file_data = client.recv(1024)
     with open("respuesta_servidor.txt", 'wb') as file:
-        file.write(file_data)
+        file_data = client.recv(1024)
+        while file_data:
+            file.write(file_data)
+            file_data = client.recv(1024)
     
     # Leer y mostrar el mensaje de respuesta del servidor
     with open("respuesta_servidor.txt", 'r') as file:
