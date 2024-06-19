@@ -41,14 +41,17 @@ while True:
     with open("mensaje_cliente.txt", 'w') as file:
         file.write(msg)
     
-    # Enviar archivo al servidor
-    with open("mensaje_cliente.txt", 'rb') as file:
+    # Encriptar mensaje
+    funciones_principales.Encriptar('mensaje_cliente.txt', 'ClavePublica_Serv', 'Oculto.jpeg', is_file=True)
+
+    # Enviar archivo encriptado al servidor
+    with open("Oculto.jpeg", 'rb') as file:
         data = file.read()
         client.sendall(data)
         client.sendall(b'<<END>>')  # Enviar marcador de finalización
 
     # Recibir el archivo del servidor
-    with open("respuesta_servidor.txt", 'wb') as file:
+    with open("respuesta_servidor.jpeg", 'wb') as file:
         while True:
             file_data = client.recv(1024)
             if b'<<END>>' in file_data:
@@ -56,7 +59,5 @@ while True:
                 break
             file.write(file_data)
     
-    # Leer y mostrar el mensaje de respuesta del servidor
-    with open("respuesta_servidor.txt", 'r') as file:
-        response_msg = file.read()
-        print(f"Respuesta del servidor: {response_msg}")
+    # Aquí puedes agregar código para desencriptar respuesta_servidor.jpeg si es necesario
+    print("Archivo de respuesta recibido y guardado como respuesta_servidor.jpeg")

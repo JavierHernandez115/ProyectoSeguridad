@@ -73,7 +73,7 @@ server_ip = get_local_ip()  # Obtiene la IP local correcta
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server.bind((server_ip, 8888))  # Cambiar el puerto aquí si es necesario
 server.listen(5)
-print(f"[*] Servidor escuchando en {server_ip}:8888")
+print(f"[*] Servidor escuchando en {server_ip}:9999")
 funciones_principales.GenerarLlavesServidor()
 
 while True:

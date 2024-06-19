@@ -10,7 +10,7 @@ def GenerarLlavesServidor():
     
 def GenerarLlavesCliente():
     clavePrivada=funciones.generar_clave_privada_rsa("ClavePrivada_Client", "123456")
-    clavePrivada=funciones.generar_clave_publica_rsa("ClavePrivada_Client", "ClavePublica_Clien","123456")
+    clavePrivada=funciones.generar_clave_publica_rsa("ClavePrivada_Client", "ClavePublica_Client","123456")
 
 def Encriptar(cout, ClavePublica, Stego, is_file=False):
     mensaje=""
