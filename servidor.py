@@ -1,5 +1,6 @@
 import socket
 import threading
+import netifaces
 
 # Función para manejar la conexión con el cliente
 def handle_client(client_socket, addr):
@@ -24,8 +25,18 @@ def handle_client(client_socket, addr):
         
     client_socket.close()
 
-# Configuración del servidor
-server_ip = socket.gethostbyname(socket.gethostname())  # Obtiene la IP de la máquina donde se ejecuta
+# Obtiene la IP de la interfaz de red
+def get_local_ip():
+    interfaces = netifaces.interfaces()
+    for iface in interfaces:
+        addrs = netifaces.ifaddresses(iface)
+        if netifaces.AF_INET in addrs:
+            ip_info = addrs[netifaces.AF_INET][0]
+            if ip_info['addr'] != '127.0.0.1':
+                return ip_info['addr']
+    return '127.0.0.1'
+
+server_ip = get_local_ip()  # Obtiene la IP local correcta
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server.bind((server_ip, 9999))
 server.listen(5)
