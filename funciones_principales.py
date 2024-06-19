@@ -2,8 +2,6 @@ import funciones
 import os
 
 
-#Generacion de claves
-
 
 
 def GenerarLlavesServidor():
@@ -65,4 +63,3 @@ def Desencriptar():
         print("El hash b2 no coincide")
 
 
-#Encriptar("prueba.mp3","ClavePublica_Con","imagen.jpeg",True)
