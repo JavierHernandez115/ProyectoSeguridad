@@ -23,6 +23,9 @@ with open("ClavePublica_Client", 'rb') as file:
     client.sendall(data)
     client.sendall(b'<<END>>')  # Enviar marcador de finalización
 
+# Esperar confirmación de recepción del archivo ClavePublica_Client
+client.recv(1024)
+
 # Recibir el archivo ClavePublica_Serv del servidor
 with open("ClavePublica_Serv", 'wb') as file:
     while True:
@@ -43,7 +46,7 @@ while True:
         file.write(msg)
     
     # Encriptar mensaje
-    funciones_principales.Encriptar('mensaje_cliente.txt', 'ClavePublica_Serv', 'imagen.jpeg', is_file=True)
+    funciones_principales.Encriptar('mensaje_cliente.txt', 'ClavePublica_Serv', 'Oculto.jpeg', is_file=True)
 
     # Enviar archivos encriptados al servidor
     for filename in ['Oculto.jpeg', 'hash384', 'hash512', 'hashb2']:
@@ -52,6 +55,9 @@ while True:
             client.sendall(data)
             client.sendall(b'<<END>>')  # Enviar marcador de finalización
         os.remove(filename)  # Eliminar archivo después de enviarlo
+
+        # Esperar confirmación de recepción del archivo
+        client.recv(1024)
 
     # Recibir los archivos del servidor
     for filename in ['Oculto_respuesta.jpeg', 'hash384_respuesta', 'hash512_respuesta', 'hashb2_respuesta']:
@@ -63,5 +69,7 @@ while True:
                     break
                 file.write(file_data)
 
-    # Aquí puedes agregar código para desencriptar Oculto_respuesta.jpeg si es necesario
+        # Confirmar recepción del archivo
+        client.sendall(b'ACK')
+
     print("Archivos de respuesta recibidos y guardados.")

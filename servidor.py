@@ -25,6 +25,9 @@ def handle_client(client_socket, addr):
                     break
                 file.write(file_data)
 
+        # Confirmar recepción del archivo ClavePublica_Client
+        client_socket.sendall(b'ACK')
+
         print("Archivo ClavePublica_Client recibido y guardado.")
 
         while True:
@@ -37,6 +40,9 @@ def handle_client(client_socket, addr):
                             file.write(file_data.replace(b'<<END>>', b''))
                             break
                         file.write(file_data)
+
+                # Confirmar recepción del archivo
+                client_socket.sendall(b'ACK')
 
             # Aquí puedes agregar código para desencriptar Oculto.jpeg si es necesario
 
@@ -57,6 +63,9 @@ def handle_client(client_socket, addr):
                     client_socket.sendall(data)
                     client_socket.sendall(b'<<END>>')  # Enviar marcador de finalización
                 os.remove(filename)  # Eliminar archivo después de enviarlo
+
+                # Esperar confirmación de recepción del archivo
+                client_socket.recv(1024)
     except Exception as e:
         print(f"Error al manejar el cliente {addr}: {e}")
     finally:
