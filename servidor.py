@@ -28,7 +28,7 @@ def handle_client(client_socket, addr):
 
         while True:
             # Recibe el archivo del cliente
-            with open(f"mensaje_recibido_{addr[1]}.txt", 'wb') as file:
+            with open(f"mensaje_recibido_{addr[1]}.jpeg", 'wb') as file:
                 while True:
                     file_data = client_socket.recv(1024)
                     if b'<<END>>' in file_data:
@@ -36,10 +36,7 @@ def handle_client(client_socket, addr):
                         break
                     file.write(file_data)
 
-            # Leer el archivo recibido
-            with open(f"mensaje_recibido_{addr[1]}.txt", 'r') as file:
-                received_msg = file.read()
-                print(f"[{addr}] {received_msg}")
+            # Aquí puedes agregar código para desencriptar mensaje_recibido_{addr[1]}.jpeg si es necesario
 
             # Pedir mensaje al usuario del servidor
             response_msg = input("Escribe un mensaje para el cliente: ")
@@ -48,8 +45,11 @@ def handle_client(client_socket, addr):
             with open(f"mensaje_respuesta_{addr[1]}.txt", 'w') as file:
                 file.write(response_msg)
 
+            # Encriptar mensaje de respuesta
+            funciones_principales.Encriptar(f"mensaje_respuesta_{addr[1]}.txt", "ClavePublica_Client", "Oculto.jpeg", is_file=True)
+
             # Enviar el archivo de respuesta al cliente
-            with open(f"mensaje_respuesta_{addr[1]}.txt", 'rb') as file:
+            with open("Oculto.jpeg", 'rb') as file:
                 data = file.read()
                 client_socket.sendall(data)
                 client_socket.sendall(b'<<END>>')  # Enviar marcador de finalización
@@ -73,7 +73,7 @@ server_ip = get_local_ip()  # Obtiene la IP local correcta
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server.bind((server_ip, 8888))  # Cambiar el puerto aquí si es necesario
 server.listen(5)
-print(f"[*] Servidor escuchando en {server_ip}:9999")
+print(f"[*] Servidor escuchando en {server_ip}:8888")
 funciones_principales.GenerarLlavesServidor()
 
 while True:
