@@ -30,11 +30,7 @@ def handle_client(client_socket, addr):
 
             # Enviar el archivo de respuesta al cliente
             with open(f"mensaje_respuesta_{addr[1]}.txt", 'rb') as file:
-                while True:
-                    part = file.read(1024)
-                    if not part:
-                        break
-                    client_socket.sendall(part)
+                client_socket.sendall(file.read())
         except Exception as e:
             print(f"Error al manejar el cliente {addr}: {e}")
             break

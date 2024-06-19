@@ -21,20 +21,10 @@ while True:
     
     # Enviar archivo al servidor
     with open("mensaje_cliente.txt", 'rb') as file:
-        while True:
-            part = file.read(1024)
-            if not part:
-                break
-            client.sendall(part)
+        client.sendall(file.read())
 
     # Recibir el archivo del servidor
-    file_data = b''
-    while True:
-        part = client.recv(1024)
-        if not part:
-            break
-        file_data += part
-    
+    file_data = client.recv(1024)
     with open("respuesta_servidor.txt", 'wb') as file:
         file.write(file_data)
     
