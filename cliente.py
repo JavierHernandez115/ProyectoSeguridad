@@ -18,14 +18,18 @@ funciones_principales.GenerarLlavesCliente()
 
 # Enviar archivo ClavePublica_Client al servidor
 with open("ClavePublica_Client", 'rb') as file:
-    client.sendall(file.read())
+    data = file.read()
+    client.sendall(data)
+    client.sendall(b'<<END>>')  # Enviar marcador de finalización
 
 # Recibir el archivo ClavePublica_Serv del servidor
 with open("ClavePublica_Serv", 'wb') as file:
-    file_data = client.recv(1024)
-    while file_data:
-        file.write(file_data)
+    while True:
         file_data = client.recv(1024)
+        if b'<<END>>' in file_data:
+            file.write(file_data.replace(b'<<END>>', b''))
+            break
+        file.write(file_data)
 
 print("Archivo ClavePublica_Serv recibido y guardado.")
 
@@ -39,14 +43,18 @@ while True:
     
     # Enviar archivo al servidor
     with open("mensaje_cliente.txt", 'rb') as file:
-        client.sendall(file.read())
+        data = file.read()
+        client.sendall(data)
+        client.sendall(b'<<END>>')  # Enviar marcador de finalización
 
     # Recibir el archivo del servidor
     with open("respuesta_servidor.txt", 'wb') as file:
-        file_data = client.recv(1024)
-        while file_data:
-            file.write(file_data)
+        while True:
             file_data = client.recv(1024)
+            if b'<<END>>' in file_data:
+                file.write(file_data.replace(b'<<END>>', b''))
+                break
+            file.write(file_data)
     
     # Leer y mostrar el mensaje de respuesta del servidor
     with open("respuesta_servidor.txt", 'r') as file:

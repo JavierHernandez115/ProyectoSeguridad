@@ -9,26 +9,32 @@ def handle_client(client_socket, addr):
     try:
         # Enviar archivo ClavePublica_Serv al cliente
         with open("ClavePublica_Serv", 'rb') as file:
-            client_socket.sendall(file.read())
+            data = file.read()
+            client_socket.sendall(data)
+            client_socket.sendall(b'<<END>>')  # Enviar marcador de finalización
 
         print("Archivo ClavePublica_Serv enviado al cliente.")
 
         # Recibir archivo ClavePublica_Client del cliente
         with open("ClavePublica_Client", 'wb') as file:
-            file_data = client_socket.recv(1024)
-            while file_data:
-                file.write(file_data)
+            while True:
                 file_data = client_socket.recv(1024)
+                if b'<<END>>' in file_data:
+                    file.write(file_data.replace(b'<<END>>', b''))
+                    break
+                file.write(file_data)
 
         print("Archivo ClavePublica_Client recibido y guardado.")
 
         while True:
             # Recibe el archivo del cliente
             with open(f"mensaje_recibido_{addr[1]}.txt", 'wb') as file:
-                file_data = client_socket.recv(1024)
-                while file_data:
-                    file.write(file_data)
+                while True:
                     file_data = client_socket.recv(1024)
+                    if b'<<END>>' in file_data:
+                        file.write(file_data.replace(b'<<END>>', b''))
+                        break
+                    file.write(file_data)
 
             # Leer el archivo recibido
             with open(f"mensaje_recibido_{addr[1]}.txt", 'r') as file:
@@ -44,7 +50,9 @@ def handle_client(client_socket, addr):
 
             # Enviar el archivo de respuesta al cliente
             with open(f"mensaje_respuesta_{addr[1]}.txt", 'rb') as file:
-                client_socket.sendall(file.read())
+                data = file.read()
+                client_socket.sendall(data)
+                client_socket.sendall(b'<<END>>')  # Enviar marcador de finalización
     except Exception as e:
         print(f"Error al manejar el cliente {addr}: {e}")
     finally:
