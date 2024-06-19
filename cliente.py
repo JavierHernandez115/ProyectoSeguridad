@@ -21,7 +21,11 @@ while True:
     
     # Enviar archivo al servidor
     with open("mensaje_cliente.txt", 'rb') as file:
-        client.sendall(file.read())
+        while True:
+            part = file.read(1024)
+            if not part:
+                break
+            client.sendall(part)
 
     # Recibir el archivo del servidor
     file_data = b''
