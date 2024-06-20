@@ -1,7 +1,14 @@
 import funciones
 import os
 
-
+mensajelargo='mensajelargo.txt'
+clave_aes_path = 'clave_aes'
+aes_flie='aes.bin'
+def GenerarClaveAes():
+    ClaveAes=funciones.generar_clave_aes()
+    
+    with open(clave_aes_path, 'wb') as key_file:
+        key_file.write(ClaveAes)
 
 
 def GenerarLlavesServidor():
@@ -25,17 +32,19 @@ def Encriptar(cout, ClavePublica, Stego, is_file=False):
     #Generando el hash_sha384
     hash_sha384=funciones.generar_hash_sha384(mensaje)
 
+    funciones.encriptar_archivo_aes(mensaje,"mensaje.enc",clave_aes_path)
+
+    funciones.encriptar_clave_rsa(clave_aes_path,ClavePublica,aes_flie)
     #Encriptando RSA_Invertido as m
-    funciones.encriptar_rsa_invertido(mensaje,ClavePublica,"mensaje.enc")
 
     #Generar hash512
     funciones.generar_hash_sha512("mensaje.enc")
 
     #Esconder el mensaje
-    funciones.esconder_mensaje(Stego,"mensaje.enc","Oculto.jpeg","15Agosto2003")
+    funciones.esconder_mensaje(Stego,"mensaje.enc","Oculto.wav","15Agosto2003")
 
     #Generar HashBlake2:
-    funciones.generar_hash_blake2("Oculto.jpeg")
+    funciones.generar_hash_blake2("Oculto.wav")
 
 def Desencriptar():
     if(funciones.validar_hash_blake2("Oculto.jpeg","hashb2")):
@@ -62,4 +71,6 @@ def Desencriptar():
         #No Coincide el hash b2
         print("El hash b2 no coincide")
 
-
+GenerarClaveAes()
+GenerarLlavesServidor()
+Encriptar(mensajelargo,"ClavePublica_Serv","mp4.wav",True)

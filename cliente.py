@@ -43,7 +43,7 @@ while True:
         file.write(msg)
     
     # Encriptar mensaje
-    funciones_principales.Encriptar('mensaje_cliente.txt', 'ClavePublica_Serv', 'Oculto.jpeg', is_file=True)
+    funciones_principales.Encriptar('mensaje_cliente.txt', 'ClavePublica_Serv', 'Oculto.wav', is_file=True)
 
     # Enviar archivos encriptados al servidor
     for filename in ['Oculto.jpeg', 'hash384', 'hash512', 'hashb2']:

@@ -1,7 +1,8 @@
 import subprocess
-import os
+import secrets
 import os
 import subprocess
+import tempfile
 
 def generar_hash_sha384(input_data):
 
@@ -154,16 +155,50 @@ def generar_clave_publica_rsa(nombre_archivo_privada, nombre_archivo_publica, pa
     subprocess.run(comando_publica, shell=True)
     print(f"Clave pública generada y guardada en '{nombre_archivo_publica}'.")
 
-def encriptar_archivo_aes(archivo_mensaje, clave_aes_path, archivo_encrypted):
-    comando = f"openssl enc -aes-256-cbc -salt -in {archivo_mensaje} -out {archivo_encrypted} -pass file:{clave_aes_path}"
-    subprocess.run(comando, shell=True, check=True)
+def generar_clave_aes(longitud=32):
+    return secrets.token_bytes(longitud)
 
+def encriptar_archivo_aes(archivo_entrada, archivo_salida, clave_aes_path):
+    comando = f"openssl enc -aes-256-cbc -salt -in {archivo_entrada} -out {archivo_salida} -pass file:{clave_aes_path}"
+    try:
+        subprocess.run(comando, shell=True, check=True)
+        print(f"Archivo '{archivo_entrada}' encriptado exitosamente como '{archivo_salida}'")
+    except subprocess.CalledProcessError as e:
+        print(f"Error durante la encriptación: {e}")
+    except Exception as e:
+        print(f"Ocurrió un error: {e}")
+    clave_aes_path = 'clave_aes.bin'
 
-def generar_clave_aes(clave_aes_path):
-    comando = f"openssl rand -out {clave_aes_path} 32"
-    subprocess.run(comando, shell=True, check=True)
+def encriptar_clave_rsa(clave_aes_path, clave_publica_path, archivo_salida):
+    comando = f"openssl pkeyutl -encrypt -inkey {clave_publica_path} -pubin -in {clave_aes_path} -out {archivo_salida}"
+    try:
+        subprocess.run(comando, shell=True, check=True)
+        print(f"Clave AES encriptada exitosamente como '{archivo_salida}'")
+    except subprocess.CalledProcessError as e:
+        print(f"Error durante la encriptación: {e}")
+    except Exception as e:
+        print(f"Ocurrió un error: {e}")
 
-def encriptar_clave_aes_rsa(clave_aes_path, clave_publica_path, archivo_clave_encrypted):
-    comando = f"openssl pkeyutl -encrypt -inkey {clave_publica_path} -pubin -in {clave_aes_path} -out {archivo_clave_encrypted}"
-    subprocess.run(comando, shell=True, check=True)
+def desencriptar_clave_rsa(archivo_clave_encriptada, clave_privada_path, archivo_clave_aes):
+    comando = f"openssl pkeyutl -decrypt -inkey {clave_privada_path} -in {archivo_clave_encriptada} -out {archivo_clave_aes}"
+    try:
+        subprocess.run(comando, shell=True, check=True)
+        with open(archivo_clave_aes, 'rb') as key_file:
+            clave_aes = key_file.read()
+        print("Clave AES desencriptada exitosamente")
+        return clave_aes
+    except subprocess.CalledProcessError as e:
+        print(f"Error durante la desencriptación: {e}")
+    except Exception as e:
+        print(f"Ocurrió un error: {e}")
+
+def desencriptar_archivo_aes(archivo_encriptado, archivo_salida, clave_aes_path):
+    comando = f"openssl enc -d -aes-256-cbc -in {archivo_encriptado} -out {archivo_salida} -pass file:{clave_aes_path}"
+    try:
+        subprocess.run(comando, shell=True, check=True)
+        print(f"Archivo '{archivo_encriptado}' desencriptado exitosamente como '{archivo_salida}'")
+    except subprocess.CalledProcessError as e:
+        print(f"Error durante la desencriptación: {e}")
+    except Exception as e:
+        print(f"Ocurrió un error: {e}")
 
