@@ -46,18 +46,20 @@ def Encriptar(cout, ClavePublica, Stego, is_file=False):
     #Generar HashBlake2:
     funciones.generar_hash_blake2("Oculto.wav")
 
-def Desencriptar():
-    if(funciones.validar_hash_blake2("Oculto.jpeg","hashb2")):
+def Desencriptar(ClavePrivada):
+    if(funciones.validar_hash_blake2("Oculto.wav","hashb2")):
         #Coincide el hash b2
         print("El hash b2 coincide")
 
-        if(funciones.extraer_archivo("Oculto.jpeg","15Agosto2003")):
+        if(funciones.extraer_archivo("Oculto.wav","15Agosto2003")):
             print("Se extrajo el estegobjeto")
 
             if(funciones.validar_hash_sha512("mensaje.enc","hash512")):
                 print("Hash512 coincide")
 
-                funciones.desencriptar_rsa("mensaje.enc","ClavePrivada_Con","mensaje.mp3")
+                funciones.desencriptar_clave_rsa(aes_flie,ClavePrivada,clave_aes_path)
+
+                funciones.desencriptar_archivo_aes("mensaje.enc","mensaje",clave_aes_path)
                 if(funciones.validar_hash_sha384("mensaje","hash384")):
                     print("Los hashes384 Coinciden")
                 else:
@@ -71,6 +73,7 @@ def Desencriptar():
         #No Coincide el hash b2
         print("El hash b2 no coincide")
 
-GenerarClaveAes()
-GenerarLlavesServidor()
-Encriptar(mensajelargo,"ClavePublica_Serv","mp4.wav",True)
+#GenerarClaveAes()
+#GenerarLlavesServidor()
+#Encriptar(mensajelargo,"ClavePublica_Serv","mp4.wav",True)
+#Desencriptar("ClavePrivada_Serv")

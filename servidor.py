@@ -27,7 +27,7 @@ def handle_client(client_socket, addr):
 
         print("Archivo ClavePublica_Client recibido y guardado.")
 
-        while True:
+        """while True:
             # Recibe los archivos del cliente
             for filename in ['Oculto.jpeg', 'hash384', 'hash512', 'hashb2']:
                 with open(filename, 'wb') as file:
@@ -36,27 +36,27 @@ def handle_client(client_socket, addr):
                         if b'<<END>>' in file_data:
                             file.write(file_data.replace(b'<<END>>', b''))
                             break
-                        file.write(file_data)
+                        file.write(file_data)"""
 
             # Aquí puedes agregar código para desencriptar Oculto.jpeg si es necesario
 
             # Pedir mensaje al usuario del servidor
-            response_msg = input("Escribe un mensaje para el cliente: ")
+        response_msg = input("Escribe un mensaje para el cliente: ")
 
             # Guardar el mensaje de respuesta en un archivo
-            with open(f"mensaje_respuesta_{addr[1]}.txt", 'w') as file:
+        with open(f"mensaje_respuesta_{addr[1]}.txt", 'w') as file:
                 file.write(response_msg)
 
             # Encriptar mensaje de respuesta
-            funciones_principales.Encriptar(f"mensaje_respuesta_{addr[1]}.txt", "ClavePublica_Client", "Oculto_respuesta.jpeg", is_file=True)
+            #funciones_principales.Encriptar(f"mensaje_respuesta_{addr[1]}.txt", "ClavePublica_Client", "Oculto_respuesta.jpeg", is_file=True)
 
             # Enviar archivos encriptados de respuesta al cliente
-            for filename in ["Oculto_respuesta.jpeg", 'hash384', 'hash512', 'hashb2']:
+        """for filename in ["Oculto_respuesta.jpeg", 'hash384', 'hash512', 'hashb2']:
                 with open(filename, 'rb') as file:
                     data = file.read()
                     client_socket.sendall(data)
                     client_socket.sendall(b'<<END>>')  # Enviar marcador de finalización
-                os.remove(filename)  # Eliminar archivo después de enviarlo
+                os.remove(filename)  # Eliminar archivo después de enviarlo"""
     except Exception as e:
         print(f"Error al manejar el cliente {addr}: {e}")
     finally:

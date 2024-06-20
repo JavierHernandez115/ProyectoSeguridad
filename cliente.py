@@ -43,25 +43,25 @@ while True:
         file.write(msg)
     
     # Encriptar mensaje
-    funciones_principales.Encriptar('mensaje_cliente.txt', 'ClavePublica_Serv', 'Oculto.wav', is_file=True)
+    #funciones_principales.Encriptar('mensaje_cliente.txt', 'ClavePublica_Serv', 'Oculto.wav', is_file=True)
 
     # Enviar archivos encriptados al servidor
-    for filename in ['Oculto.jpeg', 'hash384', 'hash512', 'hashb2']:
+    """for filename in ['Oculto.jpeg', 'hash384', 'hash512', 'hashb2']:
         with open(filename, 'rb') as file:
             data = file.read()
             client.sendall(data)
             client.sendall(b'<<END>>')  # Enviar marcador de finalización
-        os.remove(filename)  # Eliminar archivo después de enviarlo
+        os.remove(filename)  # Eliminar archivo después de enviarlo"""
 
     # Recibir los archivos del servidor
-    for filename in ['Oculto_respuesta.jpeg', 'hash384_respuesta', 'hash512_respuesta', 'hashb2_respuesta']:
+    """for filename in ['Oculto_respuesta.jpeg', 'hash384_respuesta', 'hash512_respuesta', 'hashb2_respuesta']:
         with open(filename, 'wb') as file:
             while True:
                 file_data = client.recv(1024)
                 if b'<<END>>' in file_data:
                     file.write(file_data.replace(b'<<END>>', b''))
                     break
-                file.write(file_data)
+                file.write(file_data)"""
 
     # Aquí puedes agregar código para desencriptar Oculto_respuesta.jpeg si es necesario
     print("Archivos de respuesta recibidos y guardados.")
